@@ -45,6 +45,31 @@
         #wish li[data-go] { cursor:pointer; }
         #wish li[data-go]:hover { background:#f9d3d7; }
 
+        /* 메인: 인기 10곳 슬라이드 */
+        .slider { position:relative; height:min(62vh,460px); min-height:340px; border-radius:16px; overflow:hidden; margin-top:8px; background:#222; }
+        .slide { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; gap:10px; padding:40px 8% ; color:#fff; opacity:0; visibility:hidden; transition:opacity .8s, visibility .8s; cursor:pointer; }
+        .slide.오름 { background:linear-gradient(135deg,#2f7d4b,#1f4d34); } .slide.해변 { background:linear-gradient(135deg,#2b8fc9,#17517a); }
+        .slide.active { opacity:1; visibility:visible; }
+        .slide .rank { font-size:14px; letter-spacing:.1em; opacity:.85; }
+        .slide h2 { margin:0; font-size:clamp(30px,6vw,52px); }
+        .slide .meta { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .slide .meta .tag { background:rgba(255,255,255,.25); font-size:13px; }
+        .slide .meta b { font-size:22px; color:#fde68a; }
+        .slide p { margin:0; max-width:640px; line-height:1.7; opacity:.95; font-size:16px; }
+        .slide .more { align-self:flex-start; margin-top:6px; padding:9px 18px; border-radius:20px; border:1px solid rgba(255,255,255,.7); background:transparent; color:#fff; font-size:14px; cursor:pointer; }
+        .arrow { position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:40px; height:40px; border-radius:50%; border:0; background:rgba(0,0,0,.35); color:#fff; font-size:20px; cursor:pointer; }
+        .arrow.l { left:10px; } .arrow.r { right:10px; }
+        .dots { position:absolute; left:0; right:0; bottom:14px; z-index:2; display:flex; justify-content:center; gap:8px; }
+        .dots button { width:10px; height:10px; padding:0; border-radius:50%; border:0; background:rgba(255,255,255,.45); cursor:pointer; }
+        .dots button.on { background:#fff; transform:scale(1.3); }
+        .progress { position:absolute; left:0; bottom:0; height:4px; background:#fde68a; z-index:2; width:0; }
+        .progress.run { animation:fill 10s linear forwards; }
+        @keyframes fill { from { width:0 } to { width:100% } }
+        .homebtns { display:flex; justify-content:center; gap:10px; margin:18px 0 8px; flex-wrap:wrap; }
+        .homebtns button { padding:12px 22px; border-radius:24px; border:1px solid var(--line); background:var(--card); font-size:15px; cursor:pointer; }
+        .homebtns button.main { background:var(--text); color:#fff; border-color:var(--text); }
+        .toplist { color:var(--dim); text-align:center; font-size:14px; margin:8px 0; }
+
         /* 상세 페이지 */
         .back { padding:8px 14px; border:1px solid var(--line); background:var(--card); border-radius:20px; cursor:pointer; font-size:14px; margin:6px 0 12px; }
         .dcard { background:var(--card); border:1px solid var(--line); border-top:6px solid var(--line); border-radius:12px; padding:20px; }
@@ -77,8 +102,22 @@
     </header>
 
     <main>
+        <div id="home">
+            <div class="slider" id="slider">
+                <div id="slides"></div>
+                <button class="arrow l" id="sPrev" aria-label="이전">‹</button>
+                <button class="arrow r" id="sNext" aria-label="다음">›</button>
+                <div class="dots" id="dots"></div>
+                <div class="progress" id="progress"></div>
+            </div>
+            <p class="toplist">점수가 가장 높은 인기 10곳 · 10초마다 자동으로 넘어갑니다 (마우스를 올리면 멈춰요)</p>
+            <div class="homebtns">
+                <button class="main" id="toList">전체 목록 보기</button>
+            </div>
+        </div>
         <div id="detail" hidden></div>
-        <div id="list">
+        <div id="list" hidden>
+        <button class="back" id="toHome">← 메인으로</button>
         <section>
             <h2>❤ 가 보고 싶은 곳</h2>
             <div id="wish"></div>
@@ -155,13 +194,14 @@
     <script>
         let items = []          // JSON 의 items 배열
         let category = "전체"   // 선택된 category 버튼
+        const WISH = "담은 곳"  // category 가 아니라 selected 가 true 인 항목을 모아 보는 특별 버튼
         const $ = (id) => document.getElementById(id)
 
         // 보기 좋게 정리: 검색어와 category 로 거른 뒤 score 높은 순으로 정렬
         const visible = () => {
             const q = $("search").value.trim()
             return items
-                .filter((it) => category === "전체" || it.category === category)
+                .filter((it) => category === "전체" || (category === WISH ? it.selected : it.category === category))
                 .filter((it) => it.name.includes(q))
                 .sort((a, b) => b.score - a.score)
         }
@@ -169,7 +209,9 @@
         const render = () => {
             const list = visible()
             $("count").textContent = `(${list.length}곳)`
-            $("msg").textContent = list.length ? "" : "조건에 맞는 장소가 없습니다."
+            $("msg").textContent = list.length ? ""
+                : category === WISH && !$("search").value.trim() ? "아직 담은 곳이 없습니다. 전체 목록에서 ♡ 담기를 눌러 보세요."
+                : "조건에 맞는 장소가 없습니다."
             $("grid").innerHTML = list.map((it) => `
                 <article class="card ${it.category}" data-go="${it.name}">
                     <div class="top"><h3>${it.name}</h3><span class="tag ${it.category}">${it.category}</span></div>
@@ -186,8 +228,9 @@
         }
 
         const makeButtons = () => {
-            const names = ["전체", ...new Set(items.map((it) => it.category))]
-            $("cats").innerHTML = names.map((n) => `<button data-c="${n}" class="${n === category ? "on" : ""}">${n}</button>`).join(" ")
+            const names = ["전체", ...new Set(items.map((it) => it.category)), WISH]
+            const label = (n) => n === WISH ? `❤ 담은 곳 (${items.filter((it) => it.selected).length})` : n
+            $("cats").innerHTML = names.map((n) => `<button data-c="${n}" class="${n === category ? "on" : ""}">${label(n)}</button>`).join(" ")
         }
 
         $("cats").onclick = (e) => {
@@ -201,6 +244,7 @@
         const toggle = (name) => {
             const it = items.find((x) => x.name === name)
             it.selected = !it.selected
+            makeButtons()   // "❤ 담은 곳 (n)" 의 개수 갱신
             render()
             route()
         }
@@ -262,17 +306,61 @@
                     ${rankAll > 1 ? mini(all[rankAll - 2]).replace("<b>", "<b>◀ 앞 순위 · ") : "<span></span>"}
                     ${rankAll < all.length ? mini(all[rankAll]).replace("<b>", "<b>다음 순위 ▶ ") : "<span></span>"}
                 </div>`
-            $("back").onclick = () => { location.hash = "" }
+            $("back").onclick = () => { location.hash = prevView }   // 상세로 오기 전 화면(메인 또는 목록)으로
             $("detail").querySelector(".pick").onclick = (e) => toggle(e.currentTarget.dataset.name)
         }
 
-        // 주소(#/이름)를 보고 목록 화면과 상세 화면 중 하나를 보여 준다
+        // ───── 메인: 인기 10곳 슬라이드 (10초 간격) ─────
+        const INTERVAL = 10000
+        let top10 = [], cur = 0, timer = null
+
+        const buildSlides = () => {
+            top10 = byScore(items).slice(0, 10)
+            $("slides").innerHTML = top10.map((it, i) => `
+                <div class="slide ${it.category}" data-go="${esc(it.name)}">
+                    <span class="rank">인기 ${i + 1}위</span>
+                    <h2>${esc(it.name)}</h2>
+                    <div class="meta"><span class="tag">${it.category}</span><b>${it.score}점</b><small>${esc(areaOf(it))}</small></div>
+                    <p>${esc(it.description)}</p>
+                    <button class="more">자세히 보기 →</button>
+                </div>`).join("")
+            $("dots").innerHTML = top10.map((_, i) => `<button data-i="${i}" aria-label="${i + 1}번 슬라이드"></button>`).join("")
+        }
+
+        const show = (i) => {
+            cur = (i + top10.length) % top10.length
+            document.querySelectorAll(".slide").forEach((s, k) => s.classList.toggle("active", k === cur))
+            document.querySelectorAll("#dots button").forEach((d, k) => d.classList.toggle("on", k === cur))
+            const p = $("progress")           // 진행 막대를 처음부터 다시 채운다
+            p.classList.remove("run"); void p.offsetWidth; p.classList.add("run")
+            clearTimeout(timer)
+            timer = setTimeout(() => show(cur + 1), INTERVAL)
+        }
+        const stopSlider = () => { clearTimeout(timer); $("progress").classList.remove("run") }
+
+        $("sPrev").onclick = () => show(cur - 1)
+        $("sNext").onclick = () => show(cur + 1)
+        $("dots").onclick = (e) => { if (e.target.dataset.i) show(Number(e.target.dataset.i)) }
+        $("slides").onclick = (e) => { const s = e.target.closest("[data-go]"); if (s) go(s.dataset.go) }
+        $("slider").onmouseenter = stopSlider                       // 마우스를 올리면 멈춤
+        $("slider").onmouseleave = () => { if (!$("home").hidden) show(cur) }
+        $("toList").onclick = () => { location.hash = "#/list" }
+        $("toHome").onclick = () => { location.hash = "" }
+
+        // 주소를 보고 메인 · 목록 · 상세 중 하나를 보여 준다
+        //   (없음) → 메인 슬라이드,  #/list → 전체 목록,  #/이름 → 그 항목의 상세
+        let prevView = ""
         const route = () => {
             const m = location.hash.match(/^#\/(.+)$/)
-            const it = m && items.find((x) => x.name === decodeURIComponent(m[1]))
-            $("detail").hidden = !it
-            $("list").hidden = !!it
-            if (it) showDetail(it)
+            const name = m && decodeURIComponent(m[1])
+            const it = name && name !== "list" && items.find((x) => x.name === name)
+            const view = it ? "detail" : name === "list" ? "list" : "home"
+            $("home").hidden = view !== "home"
+            $("list").hidden = view !== "list"
+            $("detail").hidden = view !== "detail"
+            if (view !== "detail") prevView = view === "list" ? "#/list" : ""
+            if (view === "detail") showDetail(it)
+            if (view === "home") show(cur); else stopSlider()
         }
         window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0) })
 
@@ -281,6 +369,7 @@
             $("sub").textContent = `${d.region} · ${d.topic} ${items.length}곳을 점수순으로 만나 보세요`
             makeButtons()
             render()
+            buildSlides()
             route()
         }
 
