@@ -33,17 +33,11 @@
         .pick { border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px; cursor:pointer; font-size:14px; }
         .pick.on { background:var(--pick); color:#fff; border-color:var(--pick); }
 
-        #wish { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; }
-        #wish ul { margin:0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:8px; }
-        #wish li { background:#fdecee; color:#b3303a; padding:5px 12px; border-radius:16px; font-size:14px; }
-        #wish .empty { color:var(--dim); font-size:14px; }
         #msg { color:var(--dim); padding:20px 0; text-align:center; }
 
         /* 카드를 누르면 상세 페이지로 이동 */
         .card[data-go] { cursor:pointer; transition:transform .15s, box-shadow .15s; }
         .card[data-go]:hover { transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,.1); }
-        #wish li[data-go] { cursor:pointer; }
-        #wish li[data-go]:hover { background:#f9d3d7; }
 
         /* 메인: 인기 10곳 슬라이드 */
         .slider { position:relative; height:min(62vh,460px); min-height:340px; border-radius:16px; overflow:hidden; margin-top:8px; background:#222; }
@@ -118,11 +112,6 @@
         <div id="detail" hidden></div>
         <div id="list" hidden>
         <button class="back" id="toHome">← 메인으로</button>
-        <section>
-            <h2>❤ 가 보고 싶은 곳</h2>
-            <div id="wish"></div>
-        </section>
-
         <h2>전체 목록 <span id="count" style="font-weight:400;color:var(--dim);font-size:14px"></span></h2>
         <div class="tools">
             <input id="search" type="search" placeholder="이름으로 검색 (예: 새별, 해수욕장)">
@@ -219,12 +208,6 @@
                     <div class="score"><span>${it.score}점</span><span class="bar"><i style="width:${it.score}%"></i></span></div>
                     <button class="pick ${it.selected ? "on" : ""}" data-name="${it.name}">${it.selected ? "❤ 가 보고 싶은 곳" : "♡ 담기"}</button>
                 </article>`).join("")
-
-            // selected 가 true 인 항목만 모아 "가 보고 싶은 곳" 표시 (검색·category 와 상관없이 전체에서)
-            const wish = items.filter((it) => it.selected).sort((a, b) => b.score - a.score)
-            $("wish").innerHTML = wish.length
-                ? `<ul>${wish.map((it) => `<li data-go="${it.name}">${it.name} · ${it.score}점</li>`).join("")}</ul>`
-                : `<span class="empty">아직 담은 곳이 없습니다. 카드의 ♡ 담기를 눌러 보세요.</span>`
         }
 
         const makeButtons = () => {
@@ -253,10 +236,6 @@
             if (pick) return toggle(pick.dataset.name)   // 담기 버튼은 이동하지 않고 담기만
             const card = e.target.closest("[data-go]")
             if (card) go(card.dataset.go)               // 카드의 다른 곳을 누르면 상세 페이지로
-        }
-        $("wish").onclick = (e) => {
-            const li = e.target.closest("[data-go]")
-            if (li) go(li.dataset.go)
         }
 
         // ───── 상세 페이지 ─────
