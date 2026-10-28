@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제주 오름·해변</title>
+    <style>
+        :root { --bg:#f4f8f7; --card:#fff; --text:#1f2d2b; --dim:#6b7c79; --line:#dbe6e3; --oreum:#3f8f5b; --beach:#2b8fc9; --pick:#e8505b; }
+        * { box-sizing: border-box; }
+        body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,"Malgun Gothic",sans-serif; }
+        header { padding:36px 16px 24px; text-align:center; background:linear-gradient(135deg,#3f8f5b,#2b8fc9); color:#fff; }
+        header h1 { margin:0 0 8px; font-size:30px; }
+        header p { margin:0; opacity:.9; }
+        main { max-width:1100px; margin:0 auto; padding:16px; }
+
+        .tools { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:8px 0 16px; }
+        .tools input { flex:1; min-width:180px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; }
+        .tools button { padding:9px 16px; border:1px solid var(--line); background:var(--card); border-radius:20px; font-size:14px; cursor:pointer; }
+        .tools button.on { background:var(--text); color:#fff; border-color:var(--text); }
+
+        h2 { font-size:18px; margin:22px 0 10px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+        .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px; border-top:5px solid var(--line); }
+        .card.오름 { border-top-color:var(--oreum); } .card.해변 { border-top-color:var(--beach); }
+        .card .top { display:flex; justify-content:space-between; align-items:center; }
+        .tag { font-size:12px; padding:2px 8px; border-radius:10px; color:#fff; }
+        .tag.오름 { background:var(--oreum); } .tag.해변 { background:var(--beach); }
+        .card h3 { margin:0; font-size:18px; }
+        .card p { margin:0; color:var(--dim); font-size:14px; line-height:1.5; flex:1; }
+        .score { display:flex; align-items:center; gap:8px; font-size:13px; }
+        .bar { flex:1; height:8px; background:var(--line); border-radius:4px; overflow:hidden; }
+        .bar i { display:block; height:100%; background:linear-gradient(90deg,#fbbf24,#f97316); }
+        .pick { border:1px solid var(--line); background:#fff; border-radius:8px; padding:6px; cursor:pointer; font-size:14px; }
+        .pick.on { background:var(--pick); color:#fff; border-color:var(--pick); }
+
+        #wish { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; }
+        #wish ul { margin:0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:8px; }
+        #wish li { background:#fdecee; color:#b3303a; padding:5px 12px; border-radius:16px; font-size:14px; }
+        #wish .empty { color:var(--dim); font-size:14px; }
+        #msg { color:var(--dim); padding:20px 0; text-align:center; }
+
+        /* 카드를 누르면 상세 페이지로 이동 */
+        .card[data-go] { cursor:pointer; transition:transform .15s, box-shadow .15s; }
+        .card[data-go]:hover { transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,.1); }
+        #wish li[data-go] { cursor:pointer; }
+        #wish li[data-go]:hover { background:#f9d3d7; }
+
+        /* 상세 페이지 */
+        .back { padding:8px 14px; border:1px solid var(--line); background:var(--card); border-radius:20px; cursor:pointer; font-size:14px; margin:6px 0 12px; }
+        .dcard { background:var(--card); border:1px solid var(--line); border-top:6px solid var(--line); border-radius:12px; padding:20px; }
+        .dcard.오름 { border-top-color:var(--oreum); } .dcard.해변 { border-top-color:var(--beach); }
+        .dhead { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .dhead h2 { margin:0; font-size:28px; }
+        .dscore { margin:16px 0; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+        .dscore b { font-size:40px; color:#f97316; }
+        .dscore .bar { min-width:140px; height:12px; }
+        .dscore small { color:var(--dim); }
+        .info { display:grid; grid-template-columns:70px 1fr; gap:10px 12px; margin:0 0 16px; }
+        .info dt { color:var(--dim); font-size:14px; }
+        .info dd { margin:0; line-height:1.6; }
+        .actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .actions a, .actions button { padding:9px 14px; border:1px solid var(--line); background:#fff; border-radius:8px; font-size:14px; cursor:pointer; color:var(--text); text-decoration:none; }
+        .actions .pick.on { background:var(--pick); color:#fff; border-color:var(--pick); }
+        .minis { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+        .mini { display:block; padding:10px 12px; background:var(--card); border:1px solid var(--line); border-radius:10px; text-decoration:none; color:var(--text); }
+        .mini:hover { border-color:var(--text); }
+        .mini b { display:block; }
+        .mini span { font-size:13px; color:var(--dim); }
+        .pn { display:flex; justify-content:space-between; gap:10px; margin:20px 0; flex-wrap:wrap; }
+        .pn .mini { flex:1; min-width:200px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>제주 오름 · 해변</h1>
+        <p id="sub">제주의 오름과 해변을 점수순으로 만나 보세요</p>
+    </header>
+
+    <main>
+        <div id="detail" hidden></div>
+        <div id="list">
+        <section>
+            <h2>❤ 가 보고 싶은 곳</h2>
+            <div id="wish"></div>
+        </section>
+
+        <h2>전체 목록 <span id="count" style="font-weight:400;color:var(--dim);font-size:14px"></span></h2>
+        <div class="tools">
+            <input id="search" type="search" placeholder="이름으로 검색 (예: 새별, 해수욕장)">
+            <span id="cats"></span>
+        </div>
+        <div class="grid" id="grid"></div>
+        <div id="msg"></div>
+        </div>
+    </main>
+    <script id="backup" type="application/json">
+{
+  "region": "제주특별자치도",
+  "topic": "제주 오름·해변",
+  "items": [
+    { "name": "새별오름", "category": "오름", "description": "제주시 애월 지역의 오름. 억새와 들불축제로 유명하고 해 질 녘 풍경이 좋다", "score": 85, "selected": true, "source": "" },
+    { "name": "협재해수욕장", "category": "해변", "description": "제주시 한림 지역의 해변. 에메랄드빛 얕은 바다와 비양도 풍경이 특징", "score": 90, "selected": false, "source": "" },
+    { "name": "금오름", "category": "오름", "description": "제주시 한림 지역의 오름. 정상에 물이 고인 분화구(금악담)가 있다", "score": 83, "selected": false, "source": "" },
+    { "name": "다랑쉬오름", "category": "오름", "description": "제주시 구좌 지역의 오름. '오름의 여왕'으로 불리며 깊고 둥근 굼부리가 인상적이다", "score": 92, "selected": true, "source": "" },
+    { "name": "용눈이오름", "category": "오름", "description": "제주시 구좌 지역의 오름. 부드러운 능선과 3개의 분화구가 이어지는 풍경", "score": 91, "selected": true, "source": "" },
+    { "name": "아부오름", "category": "오름", "description": "제주시 구좌 지역의 오름. 낮은 높이에 둥근 분화구와 삼나무 숲이 있어 오르기 쉽다", "score": 80, "selected": false, "source": "" },
+    { "name": "지미봉", "category": "오름", "description": "제주시 구좌 지역의 오름. 종달리에 있으며 우도와 성산일출봉 쪽 전망이 좋다", "score": 82, "selected": false, "source": "" },
+    { "name": "따라비오름", "category": "오름", "description": "서귀포시 표선 지역의 오름. 세 개의 분화구와 억새, 부드러운 곡선이 아름답다", "score": 93, "selected": true, "source": "" },
+    { "name": "큰사슴이오름", "category": "오름", "description": "서귀포시 표선 지역의 오름. 따라비오름 옆에서 가시리 일대를 내려다볼 수 있다", "score": 78, "selected": false, "source": "" },
+    { "name": "백약이오름", "category": "오름", "description": "서귀포시 성산 지역의 오름. 완만한 길과 원형 분화구, 사방으로 트인 전망", "score": 81, "selected": false, "source": "" },
+    { "name": "높은오름", "category": "오름", "description": "제주시 구좌 지역의 오름. 이름처럼 주변에서 두드러지게 높고 다랑쉬오름과 가깝다", "score": 76, "selected": false, "source": "" },
+    { "name": "노꼬메오름", "category": "오름", "description": "제주시 애월 지역의 오름. 큰노꼬메와 족은노꼬메 두 봉우리로 이루어진 오름", "score": 79, "selected": false, "source": "" },
+    { "name": "바리메오름", "category": "오름", "description": "제주시 애월 지역의 오름. 바리때 모양의 분화구를 가진 조용한 오름", "score": 74, "selected": false, "source": "" },
+    { "name": "도두봉", "category": "오름", "description": "제주시 도두동의 작은 오름. 공항과 바다가 함께 보여 가볍게 오르기 좋다", "score": 77, "selected": false, "source": "" },
+    { "name": "사라봉", "category": "오름", "description": "제주시 건입동의 오름. 도심 가까이에서 일몰과 제주항 풍경을 볼 수 있다", "score": 75, "selected": false, "source": "" },
+    { "name": "별도봉", "category": "오름", "description": "제주시 화북 지역의 오름. 사라봉과 이어지는 산책로와 해안 절벽 풍경이 있다", "score": 73, "selected": false, "source": "" },
+    { "name": "원당봉", "category": "오름", "description": "제주시 삼양 지역의 오름. 불탑사와 원당사 등 사찰이 있는 낮은 오름", "score": 68, "selected": false, "source": "" },
+    { "name": "어승생악", "category": "오름", "description": "제주시 해안동의 오름. 한라산 1100m 부근에 있고 짧은 탐방로로 한라산 전망을 볼 수 있다", "score": 88, "selected": false, "source": "" },
+    { "name": "거문오름", "category": "오름", "description": "제주시 조천 지역의 오름. 용암이 흐른 길과 곶자왈 숲이 있는 세계자연유산 구역", "score": 86, "selected": false, "source": "" },
+    { "name": "송악산", "category": "오름", "description": "서귀포시 대정 지역의 오름. 바다 위로 솟아 가파도와 마라도가 바라보인다", "score": 87, "selected": true, "source": "" },
+    { "name": "물영아리오름", "category": "오름", "description": "서귀포시 남원 지역의 오름. 분화구에 습지가 형성된 람사르습지 오름", "score": 72, "selected": false, "source": "" },
+    { "name": "영주산", "category": "오름", "description": "서귀포시 성산 지역의 오름. 계단을 따라 오르면 성읍 일대가 내려다보인다", "score": 70, "selected": false, "source": "" },
+    { "name": "두산봉", "category": "오름", "description": "서귀포시 성산 지역의 오름. 말미오름이라고도 하며 성산일출봉과 우도가 잘 보인다", "score": 84, "selected": false, "source": "" },
+    { "name": "서우봉", "category": "오름", "description": "제주시 조천 지역의 오름. 함덕해수욕장 옆에 있어 바다와 해변을 한눈에 볼 수 있다", "score": 80, "selected": false, "source": "" },
+    { "name": "저지오름", "category": "오름", "description": "제주시 한경 지역의 오름. 분화구를 따라 도는 숲길과 저지곶자왈 쪽 전망이 있다", "score": 71, "selected": false, "source": "" },
+    { "name": "군산오름", "category": "오름", "description": "서귀포시 안덕 지역의 오름. 정상에서 산방산과 한라산을 함께 볼 수 있다", "score": 75, "selected": false, "source": "" },
+    { "name": "안돌오름", "category": "오름", "description": "제주시 구좌 지역의 오름. 다랑쉬오름과 가까워 함께 둘러보는 조용한 오름", "score": 72, "selected": false, "source": "" },
+    { "name": "동검은이오름", "category": "오름", "description": "제주시 구좌 지역의 오름. 곶자왈 숲길을 지나 오르는 거문오름 계열의 오름", "score": 69, "selected": false, "source": "" },
+    { "name": "둔지오름", "category": "오름", "description": "서귀포시 성산 지역의 오름. 송당과 가까운 낮은 오름으로 드넓은 목초지와 분화구가 있다", "score": 67, "selected": false, "source": "" },
+    { "name": "함덕해수욕장", "category": "해변", "description": "제주시 조천 지역의 해변. 맑고 얕은 바다와 서우봉이 어우러진 인기 해변", "score": 91, "selected": true, "source": "" },
+    { "name": "금능해수욕장", "category": "해변", "description": "제주시 한림 지역의 해변. 협재와 이웃해 있고 비교적 한적하며 야자수 풍경이 있다", "score": 85, "selected": false, "source": "" },
+    { "name": "김녕해수욕장", "category": "해변", "description": "제주시 구좌 지역의 해변. 투명한 바다색과 하얀 모래, 바람이 센 날의 파도가 특징", "score": 87, "selected": false, "source": "" },
+    { "name": "월정리해변", "category": "해변", "description": "제주시 구좌 지역의 해변. 맑은 바다색과 해안 카페 거리로 알려져 있다", "score": 88, "selected": true, "source": "" },
+    { "name": "세화해변", "category": "해변", "description": "제주시 구좌 지역의 해변. 잔잔한 바다와 오일장, 해안 마을 분위기가 있다", "score": 80, "selected": false, "source": "" },
+    { "name": "평대리해변", "category": "해변", "description": "제주시 구좌 지역의 해변. 마을 해안을 따라 걷기 좋은 한적한 해변", "score": 74, "selected": false, "source": "" },
+    { "name": "하도해변", "category": "해변", "description": "제주시 구좌 지역의 해변. 철새도래지와 가까운 조용한 해변", "score": 73, "selected": false, "source": "" },
+    { "name": "이호테우해변", "category": "해변", "description": "제주시 이호동의 해변. 말 모양 등대가 있고 노을이 아름다운 도심 가까운 해변", "score": 82, "selected": false, "source": "" },
+    { "name": "곽지해수욕장", "category": "해변", "description": "제주시 애월 지역의 해변. 해안가 용천수 노천탕과 넓은 모래사장이 있다", "score": 86, "selected": false, "source": "" },
+    { "name": "한담해변", "category": "해변", "description": "제주시 애월 지역의 해변. 곽지와 이어지는 해안 산책로와 맑은 바다", "score": 83, "selected": false, "source": "" },
+    { "name": "삼양검은모래해변", "category": "해변", "description": "제주시 삼양 지역의 해변. 검은 모래로 유명하며 모래찜질 체험으로 알려져 있다", "score": 78, "selected": false, "source": "" },
+    { "name": "표선해수욕장", "category": "해변", "description": "서귀포시 표선 지역의 해변. 썰물에 넓은 백사장이 드러나는 얕은 해변", "score": 84, "selected": false, "source": "" },
+    { "name": "신양섭지해수욕장", "category": "해변", "description": "서귀포시 성산 지역의 해변. 섭지코지와 가깝고 성산일출봉이 보이는 해변", "score": 79, "selected": false, "source": "" },
+    { "name": "광치기해변", "category": "해변", "description": "서귀포시 성산 지역의 해변. 성산일출봉 앞 검은 현무암과 해초 풍경, 일출 명소", "score": 89, "selected": true, "source": "" },
+    { "name": "중문색달해수욕장", "category": "해변", "description": "서귀포시 중문 지역의 해변. 파도가 높아 서핑 명소로 알려져 있다", "score": 85, "selected": false, "source": "" },
+    { "name": "사계해변", "category": "해변", "description": "서귀포시 안덕 지역의 해변. 산방산과 형제섬을 바라보는 풍경이 좋다", "score": 88, "selected": false, "source": "" },
+    { "name": "화순금모래해변", "category": "해변", "description": "서귀포시 안덕 지역의 해변. 금빛 모래와 산방산 쪽 전망, 용천수가 있다", "score": 81, "selected": false, "source": "" },
+    { "name": "하모해변", "category": "해변", "description": "서귀포시 대정 지역의 해변. 송악산과 가까운 한적한 해변이다", "score": 70, "selected": false, "source": "" },
+    { "name": "서빈백사", "category": "해변", "description": "제주시 우도의 해변. 홍조단괴로 이루어진 하얀 해변과 에메랄드빛 바다", "score": 94, "selected": true, "source": "" },
+    { "name": "하고수동해수욕장", "category": "해변", "description": "제주시 우도의 해변. 넓은 백사장과 맑은 바다로 우도에서 해수욕하기 좋다", "score": 86, "selected": false, "source": "" },
+    { "name": "검멀레해변", "category": "해변", "description": "제주시 우도의 해변. 검은 모래와 해식동굴이 있는 독특한 해변", "score": 83, "selected": false, "source": "" }
+  ]
+}
+    </script>
+
+    <script>
+        let items = []          // JSON 의 items 배열
+        let category = "전체"   // 선택된 category 버튼
+        const $ = (id) => document.getElementById(id)
+
+        // 보기 좋게 정리: 검색어와 category 로 거른 뒤 score 높은 순으로 정렬
+        const visible = () => {
+            const q = $("search").value.trim()
+            return items
+                .filter((it) => category === "전체" || it.category === category)
+                .filter((it) => it.name.includes(q))
+                .sort((a, b) => b.score - a.score)
+        }
+
+        const render = () => {
+            const list = visible()
+            $("count").textContent = `(${list.length}곳)`
+            $("msg").textContent = list.length ? "" : "조건에 맞는 장소가 없습니다."
+            $("grid").innerHTML = list.map((it) => `
+                <article class="card ${it.category}" data-go="${it.name}">
+                    <div class="top"><h3>${it.name}</h3><span class="tag ${it.category}">${it.category}</span></div>
+                    <p>${it.description}</p>
+                    <div class="score"><span>${it.score}점</span><span class="bar"><i style="width:${it.score}%"></i></span></div>
+                    <button class="pick ${it.selected ? "on" : ""}" data-name="${it.name}">${it.selected ? "❤ 가 보고 싶은 곳" : "♡ 담기"}</button>
+                </article>`).join("")
+
+            // selected 가 true 인 항목만 모아 "가 보고 싶은 곳" 표시 (검색·category 와 상관없이 전체에서)
+            const wish = items.filter((it) => it.selected).sort((a, b) => b.score - a.score)
+            $("wish").innerHTML = wish.length
+                ? `<ul>${wish.map((it) => `<li data-go="${it.name}">${it.name} · ${it.score}점</li>`).join("")}</ul>`
+                : `<span class="empty">아직 담은 곳이 없습니다. 카드의 ♡ 담기를 눌러 보세요.</span>`
+        }
+
+        const makeButtons = () => {
+            const names = ["전체", ...new Set(items.map((it) => it.category))]
+            $("cats").innerHTML = names.map((n) => `<button data-c="${n}" class="${n === category ? "on" : ""}">${n}</button>`).join(" ")
+        }
+
+        $("cats").onclick = (e) => {
+            if (!e.target.dataset.c) return
+            category = e.target.dataset.c
+            makeButtons()
+            render()
+        }
+        $("search").oninput = render
+        // 카드의 담기 버튼: selected 값을 뒤집는다 (이 화면에서만 바뀌고 JSON 파일은 그대로)
+        const toggle = (name) => {
+            const it = items.find((x) => x.name === name)
+            it.selected = !it.selected
+            render()
+            route()
+        }
+        $("grid").onclick = (e) => {
+            const pick = e.target.closest(".pick")
+            if (pick) return toggle(pick.dataset.name)   // 담기 버튼은 이동하지 않고 담기만
+            const card = e.target.closest("[data-go]")
+            if (card) go(card.dataset.go)               // 카드의 다른 곳을 누르면 상세 페이지로
+        }
+        $("wish").onclick = (e) => {
+            const li = e.target.closest("[data-go]")
+            if (li) go(li.dataset.go)
+        }
+
+        // ───── 상세 페이지 ─────
+        // 주소 뒤의 #/이름 으로 어떤 항목인지 구분한다 (예: oreum_beach.html#/새별오름). 뒤로 가기도 그대로 동작한다.
+        const go = (name) => { location.hash = "#/" + encodeURIComponent(name) }
+        const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]))
+        const byScore = (list) => [...list].sort((a, b) => b.score - a.score)
+
+        // description 은 "제주시 애월 지역의 오름. 특징…" 꼴이라서 지역과 볼거리를 잘라 낸다
+        const areaOf = (it) => ((it.description.match(/^(.+?)(?: 지역)?의 /) || [])[1] || "")
+        const featureOf = (it) => it.description.split(". ").slice(1).join(". ")
+
+        const mini = (it) => `<a class="mini" href="#/${encodeURIComponent(it.name)}"><b>${esc(it.name)}</b><span>${it.category} · ${it.score}점</span></a>`
+
+        const showDetail = (it) => {
+            const all = byScore(items)
+            const sameCat = byScore(items.filter((x) => x.category === it.category))
+            const rankAll = all.indexOf(it) + 1
+            const rankCat = sameCat.indexOf(it) + 1
+            const area = areaOf(it)
+            const sameArea = area ? all.filter((x) => x !== it && areaOf(x) === area).slice(0, 6) : []
+            const similar = sameCat.filter((x) => x !== it).slice(0, 4)
+            const q = encodeURIComponent(it.name + " 제주")
+
+            $("detail").innerHTML = `
+                <button class="back" id="back">← 목록으로</button>
+                <article class="dcard ${it.category}">
+                    <div class="dhead"><span class="tag ${it.category}">${it.category}</span><h2>${esc(it.name)}</h2></div>
+                    <div class="dscore"><b>${it.score}</b><small>점</small><span class="bar"><i style="width:${it.score}%"></i></span>
+                        <small>전체 ${all.length}곳 중 ${rankAll}위 · ${it.category} ${sameCat.length}곳 중 ${rankCat}위</small></div>
+                    <dl class="info">
+                        <dt>지역</dt><dd>${esc(area || "정보 없음")}</dd>
+                        <dt>분류</dt><dd>${it.category}</dd>
+                        <dt>소개</dt><dd>${esc(it.description)}</dd>
+                        ${featureOf(it) ? `<dt>볼거리</dt><dd>${esc(featureOf(it))}</dd>` : ""}
+                        <dt>출처</dt><dd>${it.source ? esc(it.source) : "아직 기록되지 않았습니다"}</dd>
+                    </dl>
+                    <div class="actions">
+                        <button class="pick ${it.selected ? "on" : ""}" data-name="${esc(it.name)}">${it.selected ? "❤ 가 보고 싶은 곳" : "♡ 담기"}</button>
+                        <a href="https://map.naver.com/p/search/${q}" target="_blank" rel="noopener">네이버 지도에서 찾기</a>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">구글 지도에서 찾기</a>
+                    </div>
+                </article>
+                ${sameArea.length ? `<h2>같은 지역의 다른 곳 (${esc(area)})</h2><div class="minis">${sameArea.map(mini).join("")}</div>` : ""}
+                <h2>같은 ${it.category} 중 추천</h2><div class="minis">${similar.map(mini).join("")}</div>
+                <div class="pn">
+                    ${rankAll > 1 ? mini(all[rankAll - 2]).replace("<b>", "<b>◀ 앞 순위 · ") : "<span></span>"}
+                    ${rankAll < all.length ? mini(all[rankAll]).replace("<b>", "<b>다음 순위 ▶ ") : "<span></span>"}
+                </div>`
+            $("back").onclick = () => { location.hash = "" }
+            $("detail").querySelector(".pick").onclick = (e) => toggle(e.currentTarget.dataset.name)
+        }
+
+        // 주소(#/이름)를 보고 목록 화면과 상세 화면 중 하나를 보여 준다
+        const route = () => {
+            const m = location.hash.match(/^#\/(.+)$/)
+            const it = m && items.find((x) => x.name === decodeURIComponent(m[1]))
+            $("detail").hidden = !it
+            $("list").hidden = !!it
+            if (it) showDetail(it)
+        }
+        window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0) })
+
+        const start = (d) => {
+            items = d.items
+            $("sub").textContent = `${d.region} · ${d.topic} ${items.length}곳을 점수순으로 만나 보세요`
+            makeButtons()
+            render()
+            route()
+        }
+
+        // 서버로 열면 JSON 파일을 읽고, 파일을 더블클릭해 열어 file:// 로 막히면 아래 <script id="backup"> 의 복사본을 쓴다
+        fetch("jeju_oreum_beach.json")
+            .then((r) => r.json())
+            .then(start)
+            .catch(() => start(JSON.parse($("backup").textContent)))
+    </script>
+</body>
+</html>
